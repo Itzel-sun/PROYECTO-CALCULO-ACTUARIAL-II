@@ -1,0 +1,363 @@
+PROYECTO DE CÁLCULO ACTUARIAL II
+ITZEL SELENE RODRÍGUEZ GONZÁLEZ
+
+PARTE PREVIA. Probabilidad clásica con Python
+P1. Conceptos de probabilidad clásica (modelo laplaciano)
+Experimento aleatorio: un suceso que se realiza siempre en las mismas condiciones, pero cuyo resultado es incierto. Ejemplos: lanzar una moneda, un dado o dos dados.
+Espacio muestral (Ω): el conjunto de todos los resultados posibles del experimento.
+Hipótesis del modelo clásico:
+El espacio muestral Ω tiene un número finito de elementos.
+Todos los resultados son igualmente probables (por ejemplo, un dado "honesto" o no cargado).
+Los eventos son subconjuntos de Ω y se tratan igual que los conjuntos: la intersección significa "A y B", la unión significa "A o B" y la diferencia significa "A pero no B".
+Fórmula clave:
+P(A) = |A| / |Ω|
+Es decir, la probabilidad de un evento es el número de casos favorables entre el número de casos posibles.
+Propiedades que debe cumplir la probabilidad:
+P(Ω) = 1 (evento seguro)
+P(∅) = 0 (evento imposible)
+0 ≤ P(A) ≤ 1
+Si A y B son disjuntos (no comparten elementos), entonces P(A ∪ B) = P(A) + P(B)
+P2. Ejemplo: lanzar dos dados honestos
+Un dado tiene 6 caras, y cada una tiene probabilidad 1/6.
+Cada resultado del experimento es una pareja (i, j), donde i es el resultado del primer dado y j el del segundo, ambos entre 1 y 6.
+Los lanzamientos son independientes: el resultado de un dado no afecta al otro.
+
+Matemáticamente, Ω es el producto cartesiano {1,…,6} × {1,…,6}.
+Por lo tanto, |Ω| = 6² = 36 resultados posibles.
+P3. Implementación en Python
+Opción A: bucles. Se escribe una lista de parejas (i, j), con i recorriendo el rango del 1 al 6 y, para cada i, j recorriendo también el rango del 1 al 6. Esto se parece mucho a la definición matemática y muestra los resultados ordenados. Con la función len se obtiene la cardinalidad de Ω, que es 36. Hay que recordar que range(1, 7) llega hasta 6, porque el último número (7) no se incluye.
+Opción B: la librería itertools. Esta librería ofrece funciones que crean iteradores eficientes para bucles.
+Algunas son product, permutations, combinations y combinations_with_replacement, muy usadas en probabilidad.
+Se importa la librería y se usa product con la lista de elementos del 1 al 6 y el parámetro repeat=2, que calcula el producto cartesiano del conjunto consigo mismo 2 veces.
+Por sí solo, product devuelve únicamente un objeto, por lo que hay que envolverlo en set(...) (o list(...)) para ver sus elementos.
+Con set, los resultados salen desordenados.
+
+UNIDAD I. Preliminares probabilísticos y entorno computacional reproducible
+
+❖ PROPÓSITO DE LA UNIDAD
+El cálculo actuarial no es sustituir números en fórmulas. El verdadero problema es:
+- Construir una representación matemática de una obligación incierta.
+- Elegir hipótesis defendibles.
+- Relacionarlas con información observable (datos).
+- Producir un resultado que pueda auditarse (revisarse y reproducirse).
+La unidad enseña a pasar de un problema verbal de riesgo a un modelo probabilístico, calcularlo con Python, documentarlo con Git y contrastarlo con datos reales.
+
+❖ 1. Antes de la probabilidad, ¿qué problema resuelve un actuario?
+1.1 Incertidumbre, tiempo y dinero
+Toda obligación actuarial combina al menos tres ingredientes:
+1. Un evento incierto (por ejemplo, un fallecimiento o un siniestro).
+2. Un monto que depende de ese evento.
+3. Un instante de pago, que también puede ser incierto.
+Ejemplos:
+• Seguro de vida: paga un beneficio B al final del año de fallecimiento.
+• Póliza de automóvil: paga una severidad aleatoria X si ocurre un siniestro.
+• Cartera de pólizas: genera un número aleatorio N de reclamaciones.
+• Renta vitalicia: paga mientras la persona siga con vida.
+En todos los casos, el resultado económico depende de variables aleatorias.
+Idea conceptual clave del curso:
+valor actuarial = E[valor presente aleatorio]
+1.2 Una primera variable aleatoria actuarial
+Sea I el indicador de que ocurre un siniestro durante el año:
+• I = 1 si ocurre el siniestro
+• I = 0 si no ocurre
+Si la póliza paga una cantidad fija B, el costo aleatorio es:
+X = B · I
+Si P(I = 1) = q, entonces:
+E[X] = B · q
+Esta igualdad sencilla es la base de modelos más importantes: el valor esperado de una obligación depende del monto que se paga y de la probabilidad de que se active el pago.
+Una obligación actuarial se modela con variables aleatorias, y su valor esperado (monto × probabilidad de pago) es el primer paso para calcular su costo, aunque no sea todavía la prima final.
+
+❖ 2. Entorno de trabajo: GitHub, Git, Python y Visual Studio Code
+
+2.1 Por qué el entorno computacional forma parte del cálculo actuarial
+En una hoja de cálculo es posible obtener un resultado correcto y, aun así, no saber exactamente qué se hizo tres semanas después. En un proyecto profesional es indispensable conservar la trazabilidad:
+fuente de datos −→ transformación −→ modelo −→ resultado −→ reporte.
+Git registrará la historia del proyecto; GitHub almacenará el repositorio remoto y facilitará colaboración y automatización; Python ejecutará los cálculos; Visual Studio Code será el espacio de trabajo. La extensión oficial de Python de VS Code no incluye el intérprete: Python debe instalarse por separado. GitHub, por su parte, requiere una cuenta personal con correo verificado para realizar tareas básicas como crear repositorios.
+Qué instalar
+1. GitHub: una cuenta personal.
+2. Git (en Windows, Git for Windows).
+3. Python 3.
+4. Visual Studio Code.
+5. En VS Code, las extensiones Python y Jupyter de Microsoft.
+No se requiere Anaconda ni GitHub Desktop. Se busca que nosotros entendamos la relación entre repositorio, intérprete, entorno virtual y dependencias.
+Se prepara un entorno profesional y reproducible (Git, GitHub, Python, VS Code, entorno virtual, estructura ordenada, pruebas automáticas) para que cada cálculo actuarial pueda repetirse, revisarse y auditarse.
+
+❖ 3. Python mínimo para modelar riesgo
+3.1 Variables y tipos numéricos
+Python distingue enteros, números de punto flotante, booleanos y cadenas de texto. El cálculo actuarial básico es el mismo de la sección 1: costo esperado = beneficio × probabilidad (500,000 × 0.004). El guion bajo en 500_000 solo mejora la legibilidad, no cambia el valor.
+3.2 Funciones
+Una fórmula que se va a repetir debe convertirse en función. Así se puede probar, reutilizar y separar el modelo de la presentación de resultados. Ejemplo: expected_fixed_benefit(q, benefit) devuelve q * benefit.
+
+3.3 NumPy: cálculo vectorizado
+
+Una cartera tiene muchas pólizas o edades. NumPy permite operar con vectores completos en una sola instrucción, en lugar de escribir una multiplicación por cada póliza. Ejemplo: multiplicar un vector de probabilidades por el beneficio da el costo esperado de las cuatro edades de golpe.
+3.4 Pandas: tablas de datos
+Pandas organiza la información en tablas (DataFrames). En el ejemplo, la cartera tiene columnas de edad, probabilidad y beneficio, y se agrega una columna nueva expected_cost = q × benefit.
+Una tabla actuarial no es solo un conjunto de celdas: cada columna debe tener interpretación clara, unidad, procedencia y regla de transformación.
+3.5 Matplotlib: la gráfica como diagnóstico
+Una gráfica es parte del control del modelo. Antes de confiar en una tabla de mortalidad, frecuencia o severidad, conviene revisar su forma, saltos, valores extremos e inconsistencias.
+En el ejemplo se grafica la probabilidad anual contra la edad.
+3.6 SciPy: distribuciones de probabilidad
+SciPy (stats) calcula probabilidades de distribuciones conocidas. Con una binomial de n = 50 pólizas y q = 0.04:
+• pmf (función de masa de probabilidad): probabilidad de un valor exacto, por ejemplo P(N = 2).
+• cdf (función de distribución acumulada): probabilidad de "a lo más" un valor, por ejemplo P(N ≤ 2).
+3.7 Semillas y reproducibilidad
+Una simulación pseudoaleatoria debe ser reproducible cuando se usa en una práctica, prueba o reporte. Para ello se fija una semilla (por ejemplo, 31415) al crear el generador de números aleatorios.
+La semilla no hace más aleatoria la simulación: permite reconstruir exactamente la misma secuencia.
+En el ejemplo se simulan 10,000 Bernoulli con p = 0.08 y se calcula el promedio, que debe quedar cercano a 0.08.
+Con unas pocas herramientas de Python (funciones, NumPy, Pandas, Matplotlib y SciPy) se puede calcular, organizar, visualizar y simular riesgos de forma clara y reproducible.
+
+❖ 4. Lenguaje de probabilidad
+
+4.1 Experimento, resultados y eventos
+El espacio muestral es el conjunto de todos los resultados elementales que el modelo considera posibles.
+• Indicador anual de siniestro: Ω = {0, 1} (0 = no ocurre, 1 = ocurre).
+• Número de reclamaciones de una cartera: Ω = {0, 1, 2, …}.
+• Tiempo hasta un evento: Ω = [0, ∞).
+Un evento es una colección de resultados. Por ejemplo, si N es el número de reclamaciones, A = {N ≥ 3} es el evento "se observan por lo menos tres reclamaciones".
+4.2 Por qué aparece una σ-álgebra
+En cursos elementales se dice que todo subconjunto de Ω es un evento. En espacios continuos eso puede producir conjuntos a los que no se les puede asignar una probabilidad coherente, así que se elige una familia F de eventos medibles.
+Una σ-álgebra F cumple:
+1. Ω pertenece a F.
+2. Si A está en F, su complemento también.
+3. Si A₁, A₂, … están en F, su unión (numerable) también.
+4.3 Espacio de probabilidad
+Es una terna (Ω, F, P), donde P asigna a cada evento un número entre 0 y 1 y cumple:
+1. P(Ω) = 1.
+2. P(A) ≥ 0 para todo evento A.
+3. Si los eventos son disjuntos dos a dos, la probabilidad de la unión es la suma de las probabilidades.
+
+4.4 Operaciones con eventos
+
+Notación | Significado
+A ∪ B | ocurre A o B (o ambos)
+A ∩ B | ocurren A y B
+Aᶜ | no ocurre A
+A \ B | ocurre A pero no B
+
+De los axiomas se obtienen dos resultados útiles:
+• P(Aᶜ) = 1 − P(A)
+• P(A ∪ B) = P(A) + P(B) − P(A ∩ B)
+4.5 Probabilidad condicional
+Si P(B) > 0:
+P(A | B) = P(A ∩ B) / P(B)
+Condicionar es cambiar el universo de referencia: ya no se pregunta "¿con qué probabilidad ocurre A?", sino "¿con qué probabilidad ocurre A sabiendo que B ocurrió?".
+En actuaría es omnipresente. Por ejemplo, ₜpₓ = P(Tₓ > t) se refiere a una persona que ya alcanzó la edad x.
+4.6 Ley de probabilidad total
+Si B₁, …, B_k forman una partición de Ω:
+P(A) = Σ P(A | Bⱼ) P(Bⱼ)
+Esto explica por qué la frecuencia agregada de una cartera puede cambiar aunque las frecuencias de cada segmento no cambien: basta con que cambie la composición de la cartera.
+Es clave al comparar periodos, regiones o grupos de asegurados.
+4.7 Teorema de Bayes
+P(Bⱼ | A) = P(A | Bⱼ) P(Bⱼ) / Σ P(A | Bᵣ) P(Bᵣ)
+Interpretación actuarial: Bayes sirve para actualizar probabilidades tras observar información (credibilidad, clasificación de riesgo, detección de fraude, modelos predictivos). Pero ojo: que una característica sea informativa no significa que cause el siniestro.
+4.8 Independencia
+A y B son independientes si:
+
+P(A ∩ B) = P(A) P(B)
+o, equivalentemente (si P(B) > 0), P(A | B) = P(A). Es decir, conocer B no cambia la probabilidad de A.
+Error común: independiente no es lo mismo que mutuamente excluyente. De hecho, si A y B son disjuntos y ambos tienen probabilidad positiva, no pueden ser independientes (saber que ocurrió uno te dice que el otro no ocurrió).
+En una cartera, suponer independencia entre pólizas puede ser razonable para riesgos individuales, pero falla ante eventos comunes: epidemias, catástrofes, inflación de costos médicos, cambios regulatorios o choques financieros. El supuesto debe declararse, no esconderse.
+La probabilidad se construye con un espacio (Ω, F, P) y se usa en actuaría para calcular probabilidades de eventos, condicionarlas a la información disponible (probabilidad total y Bayes) y decidir con cuidado cuándo es válido suponer independencia.
+
+❖ 5. Variables aleatorias
+5.1 Definición
+Una variable aleatoria es una función medible X : Ω → ℝ, es decir, una regla que asigna un número a cada resultado del experimento.
+"Aleatoria" no significa que la función cambie: la regla X(ω) es fija. Lo incierto es qué resultado ocurrirá.
+Ejemplos actuariales:
+• I: indicador de siniestro
+• N: número de reclamaciones
+• X: monto de una reclamación
+• T: tiempo hasta el fallecimiento o hasta un evento
+• S: pérdida agregada de una cartera
+5.2 Variables discretas
+Toman valores en un conjunto finito o numerable. Su función de masa es:
+pₓ(x) = P(X = x)
+Debe cumplir: pₓ(x) ≥ 0 y la suma de todos los valores es 1.
+5.3 Variables continuas
+
+Se describen con una densidad fₓ tal que fₓ(x) ≥ 0 y su integral sobre toda la recta vale 1. Las probabilidades se obtienen integrando:
+P(a < X ≤ b) = ∫ₐᵇ fₓ(x) dx
+En una variable continua, P(X = x) = 0 para cada valor individual. La densidad no es una probabilidad puntual: solo tiene sentido como probabilidad al integrarla sobre un intervalo.
+5.4 Función de distribución (CDF)
+Fₓ(x) = P(X ≤ x)
+Propiedades: es no decreciente, continua por la derecha, tiende a 0 cuando x → −∞ y a 1 cuando x → ∞.
+Si X es continua y Fₓ es derivable, entonces fₓ(x) = F′ₓ(x): la densidad es la derivada de la CDF.
+5.5 Indicadores
+El indicador de un evento A vale 1 si A ocurre y 0 si no. Su esperanza es la probabilidad del evento:
+E[1ₐ] = P(A)
+Si N es el número de pólizas con siniestro en una cartera de n contratos:
+N = I₁ + I₂ + … + Iₙ
+donde Iⱼ indica si la póliza j tuvo siniestro. Por linealidad de la esperanza:
+E[N] = Σ E[Iⱼ] = Σ P(Iⱼ = 1)
+Este resultado no requiere independencia. El número esperado de siniestros es la suma de las probabilidades individuales, aunque las pólizas estén relacionadas entre sí. (La independencia sí importará después, para la varianza.)
+Una variable aleatoria convierte los resultados inciertos en números; se describe con una función de masa (discreta) o una densidad (continua), siempre se puede resumir con la CDF, y los indicadores permiten calcular esperanzas de conteos sin suponer independencia.
+
+❖ 6. Esperanza, varianza y dependencia
+6.1 Esperanza
+
+Es el promedio ponderado de los valores posibles de X:
+• Discreta: E[X] = Σ x · pₓ(x)
+• Continua: E[X] = ∫ x · fₓ(x) dx (si la integral existe)
+Para una función g de X se usa LOTUS (Law of the Unconscious Statistician): se calcula E[g(X)] ponderando g(x) con la misma masa o densidad de X, sin necesidad de encontrar primero la distribución de g(X).
+• Discreta: E[g(X)] = Σ g(x) pₓ(x)
+• Continua: E[g(X)] = ∫ g(x) fₓ(x) dx
+6.2 Linealidad
+• E[aX + b] = a·E[X] + b
+• E[X₁ + … + Xₙ] = E[X₁] + … + E[Xₙ]
+La independencia no es necesaria.
+Ejemplo 6.1 (cartera heterogénea): con tres pólizas de beneficios B₁, B₂, B₃ y probabilidades q₁, q₂, q₃, la pérdida S = B₁I₁ + B₂I₂ + B₃I₃ tiene
+E[S] = B₁q₁ + B₂q₂ + B₃q₃
+aunque los indicadores no sean independientes.
+6.3 Varianza
+Mide qué tan dispersa está X alrededor de su esperanza:
+• Definición: Var(X) = E[(X − E[X])²]
+• Fórmula de cálculo: Var(X) = E[X²] − (E[X])²
+• Desviación estándar: σₓ = √Var(X)
+• Para constantes a, b: Var(aX + b) = a² Var(X) (sumar una constante no cambia la dispersión; multiplicar la escala al cuadrado)
+6.4 Covarianza
+Cov(X, Y) = E[(X − E[X])(Y − E[Y])] = E[XY] − E[X]E[Y]
+Con ella:
+• Var(X + Y) = Var(X) + Var(Y) + 2 Cov(X, Y)
+• Para n variables: Var(ΣXⱼ) = ΣVar(Xⱼ) + 2 Σᵢ<ⱼ Cov(Xᵢ, Xⱼ)
+
+Idea clave: a diferencia de la esperanza, la varianza de una suma sí depende de la dependencia. Si hay un factor común (catástrofes, epidemias), las covarianzas positivas hacen que el riesgo agregado sea mucho mayor, y ignorar la dependencia subestima la dispersión de la pérdida total.
+6.5 Esperanza condicional y ley iterada
+Si Y es información observable, E[X | Y] es una variable aleatoria que resume el valor esperado de X dado Y.
+• Ley de la esperanza iterada: E[X] = E[ E[X | Y] ]
+• Descomposición de la varianza: Var(X) = E[Var(X | Y)] + Var(E[X | Y])
+Interpretación:
+• E[Var(X | Y)]: variabilidad dentro de los grupos definidos por Y.
+• Var(E[X | Y]): variabilidad entre los promedios de los grupos.
+Esta identidad aparecerá en modelos de mezcla y credibilidad.
+La esperanza resume el valor promedio (y es lineal siempre), la varianza mide la dispersión, la covarianza captura cómo la dependencia aumenta el riesgo agregado, y la esperanza condicional permite descomponer la variabilidad entre y dentro de grupos.
+
+❖ 8. Distribuciones discretas fundamentales
+8.1 Bernoulli
+Modela un solo ensayo con dos resultados: X = 1 con probabilidad p y X = 0 con probabilidad 1 − p.
+• E[X] = p
+• Var(X) = p(1 − p)
+Usos actuariales: fallece / no fallece en un periodo, hay / no hay reclamación, póliza activa / cancelada, ocurre / no ocurre un decremento específico.
+En Python, con stats.bernoulli.mean(p) y stats.bernoulli.var(p) se obtienen la media y la varianza.
+
+8.2 Binomial
+
+Es la suma de n Bernoulli independientes con la misma probabilidad p: N = X₁ + … + Xₙ ~ Binomial(n, p).
+• Función de masa: P(N = k) = C(n, k) pᵏ (1 − p)ⁿ⁻ᵏ, para k = 0, 1, …, n
+• E[N] = np
+• Var(N) = np(1 − p)
+8.3 Poisson
+N ~ Poisson(λ) si:
+P(N = k) = e⁻λ λᵏ / k!, para k = 0, 1, 2, …
+• E[N] = λ
+• Var(N) = λ
+Usos actuariales: modelo clásico para conteos de reclamaciones en un intervalo cuando los eventos son relativamente raros y la tasa es estable. También es el límite de la binomial cuando n es grande, p es pequeño y np → λ.
+En Python se usan stats.poisson.pmf(3, mu=lam) para P(N = 3) y 1 - stats.poisson.cdf(3, mu=lam) para P(N > 3).
+Diagnóstico importante: equidispersión
+La Poisson exige que varianza = media. Si en los datos la varianza es mucho mayor que la media, hay sobredispersión, y conviene considerar una binomial negativa, una mezcla Poisson o un modelo con heterogeneidad.
+Nunca se elige Poisson solo porque la variable sea un conteo.
+8.4 Geométrica
+Cuenta el número de ensayos hasta el primer éxito:
+P(N = k) = (1 − p)ᵏ⁻¹ p, para k = 1, 2, …
+• E[N] = 1/p
+• Var(N) = (1 − p)/p²
+Tiene falta de memoria: P(N > m + n | N > m) = P(N > n). Es decir, haber esperado ya m periodos sin éxito no cambia la probabilidad de esperar n más.
+En actuaría sirve como modelo elemental de espera discreta, pero la falta de memoria debe justificarse (por ejemplo, no sería razonable para la mortalidad humana, que aumenta con la edad).
+
+Las distribuciones discretas básicas modelan conteos y esperas en seguros: Bernoulli para un riesgo individual, binomial para una cartera homogénea, Poisson para frecuencias de reclamaciones (verificando que varianza ≈ media) y geométrica para tiempos de espera discretos con falta de memoria.
+
+❖ 9. Distribuciones continuas fundamentales
+9.1 Uniforme
+X ~ U(a, b) tiene densidad constante 1/(b − a) entre a y b.
+• E[X] = (a + b)/2
+• Var(X) = (b − a)²/12
+Como distribución de severidad se usa poco, pero es fundamental para simular: si U ~ U(0, 1), muchas distribuciones se generan con la transformada inversa, X = F⁻¹(U).
+9.2 Exponencial
+T ~ Exp(λ) con densidad f(t) = λe^(−λt), para t ≥ 0.
+• Supervivencia: P(T > t) = e^(−λt)
+• E[T] = 1/λ
+• Var(T) = 1/λ²
+Falta de memoria: P(T > s + t | T > s) = P(T > t). Haber sobrevivido s unidades de tiempo no cambia la probabilidad de sobrevivir t más.
+Fuerza de mortalidad constante: μ(t) = λ. Este supuesto es demasiado restrictivo para la mortalidad humana en muchas edades (el riesgo cambia con la edad), pero es un modelo elemental indispensable para entender intensidades y tiempos de espera. Es el análogo continuo de la geométrica.
+9.3 Gamma
+X ~ Gamma(α, θ) con densidad f(x) = x^(α−1) e^(−x/θ) / (Γ(α) θ^α), para x > 0.
+• E[X] = αθ
+• Var(X) = αθ²
+Es positiva y flexible, por lo que sirve para modelar severidades con sesgo a la derecha. Si α = 1, se obtiene la exponencial.
+9.4 Normal
+X ~ N(μ, σ²) con la conocida densidad en forma de campana.
+
+• Es simétrica y admite valores negativos, por lo que no siempre es buena para costos individuales positivos, sobre todo si la cola derecha real es pesada.
+• Aun así aparece de forma natural en aproximaciones de sumas y en el Teorema Central del Límite.
+No se debe elegir una distribución por costumbre. Primero se estudia el soporte, la forma de la cola, la relación media-varianza, el mecanismo generador y la calidad del ajuste.
+Las distribuciones continuas básicas sirven para generar simulaciones (uniforme), modelar tiempos de espera (exponencial), severidades positivas y sesgadas (gamma) y aproximar sumas (normal), pero siempre hay que elegirlas según el soporte, la cola y el ajuste, no por costumbre.
+
+❖ 10. De riesgos individuales a riesgo agregado
+10.1 Suma de pérdidas
+Sea S = X₁ + … + Xₙ la pérdida agregada de una cartera.
+• Esperanza (siempre): E[S] = ΣE[Xⱼ]
+• Varianza (si son independientes): Var(S) = ΣVar(Xⱼ)
+• Si además son idénticamente distribuidas con media μ y varianza σ²:
+   o E[S] = nμ
+   o Var(S) = nσ²
+Coeficiente de variación:
+CV(S) = √n·σ / (n·μ) = (1/√n) · (σ/μ)
+Al crecer n, el riesgo relativo disminuye en proporción a 1/√n. Esto ilustra la diversificación bajo independencia: aunque la pérdida total crece, es más predecible en términos relativos.
+(Esto depende de la independencia; con dependencia común, como en una catástrofe, la diversificación se debilita.)
+
+10.2 Modelo colectivo
+En seguros generales se escribe:
+S = X₁ + … + X_N
+
+donde N es el número de reclamaciones (frecuencia) y Xⱼ son sus montos (severidad). Aquí N también es aleatorio.
+Si N es independiente de las severidades, y estas son iid con E[X₁] = μ y Var(X₁) = σ², entonces:
+• Esperanza, por esperanza condicional:
+E[S] = E[E[S | N]] = E[N·μ] = μ · E[N]
+• Varianza:
+Var(S) = E[N]·σ² + Var(N)·μ²
+
+Interpretación de la varianza: el primer término es la variabilidad que viene de las severidades, y el segundo la que viene de la frecuencia.
+La pérdida agregada se puede ver como una suma de riesgos individuales (donde la diversificación reduce el riesgo relativo en 1/√n) o como un modelo colectivo con frecuencia y severidad aleatorias, donde la media es μ·E[N] y la varianza combina la variabilidad de ambos componentes.
+
+❖ 11. Ley de los grandes números y simulación
+11.1 La idea
+Si X₁, X₂, … son iid con media finita μ, la ley de los grandes números dice que el promedio muestral se acerca a la media cuando n crece:
+X̄ₙ = (1/n) Σ Xⱼ → μ
+En seguros: explica por qué una cartera grande puede ofrecer mayor estabilidad relativa, siempre que las hipótesis sean razonables:
+• independencia,
+• homogeneidad suficiente,
+• momentos finitos.
+La ley de los grandes números explica por qué las carteras grandes son más estables en términos relativos, y la simulación lo comprueba: la frecuencia observada se acerca a la probabilidad real, con fluctuaciones, pero solo si las pólizas son aproximadamente independientes y no hay riesgo sistemático.
+
+❖ 12. Datos reales de México
+12.1 INEGI y las Estadísticas de Defunciones Registradas (EDR)
+El INEGI publica las EDR para difundir información sobre la mortalidad registrada en el país. Datos de 2024:
+
+• 819,672 defunciones registradas y 74 variables en el archivo DEFUN24.
+• Datos suministrados por 4,930 fuentes informantes.
+• Tasa bruta nacional: 630 defunciones por cada 100 mil habitantes.
+Serie 2015-2024:
+[Nota: en el PDF original aquí no aparece la gráfica ni la tabla de la serie; solo queda el texto que la comenta.]
+
+Lo que muestran las gráficas: hay un salto fuerte en 2020-2021 (la pandemia) y después un descenso. Esto obliga a pensar en dependencia y choques comunes, justo lo visto en las secciones 10 y 11: una epidemia afecta a muchas vidas a la vez. Además, la tasa bruta no es una tabla de mortalidad ni un qₓ.
+12.2 Conteo, tasa y probabilidad: tres objetos distintos
+Punto clave: la tasa bruta nacional no se puede tomar como la mortalidad de todas las edades.
+12.4 Microdatos: leer el diccionario antes del CSV
+La variable EDAD no debe interpretarse automáticamente como años: el instrumento distingue minutos, horas, días, meses y años según la edad de la persona fallecida.
+Un conteo, una tasa bruta y una probabilidad individual son cosas distintas: la tasa bruta de 630 por 100 mil mezcla todas las edades y no sirve como qₓ ni para tarificar, y para trabajar con microdatos hay que leer primero el diccionario, conservar el archivo crudo intacto y validar los totales contra las cifras oficiales.
+
+Conclusión general de la Unidad I
+La idea central
+El cálculo actuarial no consiste en sustituir números en fórmulas. Consiste en convertir una obligación incierta en un modelo matemático, calcularlo de forma reproducible y contrastarlo con datos reales. Por eso toda la unidad avanza con tres lenguajes en paralelo: modelo matemático, implementación en Python y datos.
+La Unidad I enseña a pensar el riesgo como variable aleatoria, calcularlo con rigor, programarlo de forma reproducible y contrastarlo con datos reales, sin olvidar nunca que cada resultado es tan válido como las hipótesis que lo sostienen.
+
+------------------------------------------------------------------
+NOTAS DE CORRECCIÓN (formato; el contenido no se modificó)
+------------------------------------------------------------------
+- Archivo guardado en UTF-8 (acentos, ñ, Ω, ∪, ∩, σ, λ, μ y subíndices se ven bien).
+- Se unieron líneas cortadas por el PDF y se acomodaron viñetas y fórmulas.
+- Se corrigieron erratas: "1.1Conceptos", "1.Antes", "GitHub,por", "oficiales-", "PROPOSITO", etc.
+- La parte previa (probabilidad clásica con Python) se rotuló P1-P3 para que no choque con la numeración de la Unidad I.
+- Se agregó el número a los encabezados de las secciones 3 a 12 (en el PDF solo tenían ❖).
+- En el PDF original no existen la sección 7 ni la 12.3; se respetó la numeración original para no romper las referencias cruzadas ("secciones 10 y 11").
+- El PDF no incluye código ni gráficas: solo los describe en texto (secciones 3.x y 12.1).
